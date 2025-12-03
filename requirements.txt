@@ -1,0 +1,5 @@
+Polish UI (landing section, about, “How it works” for judges).
+
+Add user profiles or simple login to show personalization.
+
+Prepare a 3–5 minute demo script and slides around this app.

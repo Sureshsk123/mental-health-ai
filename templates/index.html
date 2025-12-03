@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mental Health AI Demo</title>
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Your custom CSS -->
+  <style>
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:30px;background:#f8f9fa}
+    .container{max-width:900px;margin:0 auto}
+    .form-group{margin-bottom:15px}
+    label{display:inline-block;width:180px;font-weight:500;color:#333}
+    input,select{padding:8px;border:1px solid #ddd;border-radius:6px;width:200px; font-size:16px}
+    button{background:#007bff;color:white;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-size:16px;margin-right:10px}
+    button:hover{background:#0056b3}
+    .speech-btn{background:#28a745;color:white}
+    .speech-btn:hover{background:#218838}
+    .speech-btn.recording{background:#dc3545;color:white}
+    .speech-btn.recording:hover{background:#c82333}
+    #result{margin-top:20px;padding:15px;border-radius:8px;font-weight:bold;min-height:60px}
+    .low{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
+    .medium{background:#fff3cd;color:#856404;border:1px solid #ffeaa7}
+    .high{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
+    .history{margin-top:30px}
+    table{width:100%;border-collapse:collapse;margin-top:15px}
+    th,td{padding:12px;text-align:left;border-bottom:1px solid #eee}
+    th{background:#f1f3f4;font-weight:600}
+    canvas{height:300px!important;width:100%!important}
+    .chart-container{background:white;padding:20px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.1);margin:20px 0}
+    #speechText{display:none;background:#e9ecef;padding:10px;border-radius:6px;margin-top:5px;font-style:italic}
+    /* risk colors in table cells */
+td.low {
+  background:#d4edda;
+  color:#155724;
+  border-color:#c3e6cb;
+}
+
+td.medium {
+  background:#fff3cd;
+  color:#856404;
+  border-color:#ffeaa7;
+}
+
+td.high {
+  background:#f8d7da;
+  color:#721c24;
+  border-color:#f5c6cb;
+}
+@media (max-width: 576px) {
+  .container {
+    margin: 10px;
+    padding: 0;
+  }
+  .card {
+    margin: 0;
+  }
+  table th, table td {
+    padding: 6px 4px;  /* tighter cells on small screens */
+    font-size: 0.8rem;
+  }
+  label {
+    width: 130px;      /* narrower labels on mobile */
+  }
+}
+
+ 
+ </style>
+
+  <!-- Your JS -->
+  <script src="/static/script.js"></script>
+</head>
+<body>
+    <div class="container py-4">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h1 class="card-title mb-4 text-center">🧠 Mental Health Risk Predictor</h1>
+        <p class="text-center text-muted mb-4">
+  Enter your daily data to check your mental health risk level.
+</p>
+
+<div class="d-flex justify-content-center mb-3">
+  <input type="text" id="usernameInput"
+         class="form-control form-control-sm"
+         placeholder="Enter name"
+         style="max-width: 200px; margin-right: 8px;">
+  <button type="button"
+          class="btn btn-sm btn-outline-secondary"
+          onclick="setUser()">
+    Switch User
+  </button>
+</div>
+
+
+
+    <form onsubmit="checkRisk(event); return false;">
+      <div class="form-group">
+        <label>Mood:</label>
+        <select id="mood" style="form-control">
+          <option value="happy">😊 Happy</option>
+          <option value="neutral" selected>😐 Neutral</option>
+          <option value="sad">😢 Sad</option>
+          <option value="very_sad">😭 Very Sad</option>
+        </select>
+        <!-- 🎤 SPEECH BUTTON ADDED HERE -->
+        <button type="button" class="speech-btn" onclick="startSpeech()">🎤 Speak Mood</button>
+        <div id="speechText"></div>
+      </div>
+
+      <div class="form-group">
+        <label>Sleep (hours):</label>
+        <input type="number" id="sleep" value="7" min="0" max="12" style="form-control">
+      </div>
+
+      <div class="form-group">
+        <label>Screen time (hours):</label>
+        <input type="number" id="screen" value="4" min="0" max="24" style="form-control">
+      </div>
+
+      <button type="submit">🚨 Check Risk</button>
+    </form>
+
+    <div id="result" class="mt-3"></div>
+
+<div class="card mt-3">
+  <div class="card-body">
+    <h5 class="card-title mb-3">📈 Your Risk Trend</h5>
+    <div class="chart-container">
+      <canvas id="riskChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="card mt-3 mb-2">
+  <div class="card-body">
+    <h5 class="card-title mb-3">📊 Recent History</h5>
+    <div class="table-responsive">
+      <table class="table table-sm align-middle" id="historyTable">
+        <thead class="table-light">
+          <tr><th>Date</th><th>Mood</th><th>Sleep</th><th>Screen</th><th>Risk</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+      <p class="text-center text-muted mt-2" style="font-size: 0.85rem;">
+  Data stored locally in this browser for demo purposes.
+</p>
+
+    </div>
+    </div>
+  </div>
+  <footer class="text-center text-muted py-3" style="font-size: 0.9rem;">
+  Built for HealthTech Hackathon · Mental Health Early Warning Prototype
+</footer>
+
+</body>
+</html>
