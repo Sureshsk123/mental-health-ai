@@ -1,5 +1,7 @@
 Mental Health Risk Predictor
 
+Link :- https://mental-health-ai-phi.vercel.app/
+
 A simple web app that estimates daily mental health risk using mood, sleep, and screen time, plus optional speech‑based mood detection. Built with Flask, SQLite, Bootstrap, and Chart.js.
 
 Features
