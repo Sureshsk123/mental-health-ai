@@ -97,6 +97,19 @@
       }
       label {width:130px}
     }
+    button[type="submit"] {
+  width: 100%;
+  margin-top: 8px;
+}
+    .speech-btn {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.section-title {
+  font-weight: 600;
+}
+
   </style>
 
   <!-- Your JS -->
@@ -122,6 +135,10 @@
             Switch User
           </button>
         </div>
+        <p id="currentUserLabel" class="text-center text-muted mb-3" style="font-size: 0.9rem;">
+               Viewing data for: <strong>guest</strong>
+        </p>
+        
 
         <form onsubmit="checkRisk(event); return false;">
           <div class="form-group">
@@ -153,16 +170,17 @@
 
         <div class="card mt-3">
           <div class="card-body">
-            <h5 class="card-title mb-3">📈 Your Risk Trend</h5>
+            <h5 class="card-title mb-3 section-title">📈 Your Risk Trend</h5>
             <div class="chart-container">
-              anvas id="riskChart"></canvas>
+             <canvas id="riskChart"></canvas>
             </div>
+
           </div>
         </div>
 
         <div class="card mt-3 mb-2">
           <div class="card-body">
-            <h5 class="card-title mb-3">📊 Recent History</h5>
+            <h5 class="card-title mb-3 section-title">📊 Recent History</h5>
             <div class="table-responsive">
               <table class="table table-sm align-middle" id="historyTable">
                 <thead class="table-light">

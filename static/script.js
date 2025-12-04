@@ -14,11 +14,15 @@ async function setUser() {
     const data = await res.json();
     loadHistory();
     updateChart();
-    alert("Now viewing data for: " + data.username);
+    const label = document.getElementById("currentUserLabel");
+    if (label) {
+      label.innerHTML = 'Viewing data for: <strong>' + data.username + '</strong>';
+    }
   } catch (e) {
     alert("Could not switch user");
   }
 }
+
 
 // -------- SPEECH RECOGNITION SETUP --------
 if ("webkitSpeechRecognition" in window) {
