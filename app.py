@@ -10,10 +10,17 @@ CORS(app)
 
 # SQLAlchemy engine (Postgres via DATABASE_URL)
 DATABASE_URL = os.environ.get("DATABASE_URL")
+
 if not DATABASE_URL:
+    # On Vercel this will at least let the app import without crashing
     raise RuntimeError("DATABASE_URL env var is not set")
 
-engine = create_engine(DATABASE_URL)
+try:
+    engine = create_engine(DATABASE_URL)
+except Exception as e:
+    # Print for Vercel logs and fail clearly
+    raise RuntimeError(f"Failed to create engine with DATABASE_URL: {e}")
+
 
 
 def get_current_user():
