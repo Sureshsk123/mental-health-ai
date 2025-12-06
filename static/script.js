@@ -90,6 +90,7 @@ async function startSpeech(event) {
 }
 
 // -------- CHECK RISK --------
+// -------- CHECK RISK --------
 async function checkRisk(event) {
   event.preventDefault();
 
@@ -112,15 +113,19 @@ async function checkRisk(event) {
       })
     });
 
+    // NEW: if backend returns 500, show text instead of going to catch
+    if (!res.ok) {
+      const text = await res.text();
+      resultDiv.innerHTML = "Server error: " + res.status + " " + text;
+      resultDiv.className = "high";
+      return;
+    }
+
     const data = await res.json();
 
-    // remove old classes
     resultDiv.classList.remove("low", "medium", "high");
-
-    // set text
     resultDiv.innerHTML = `Risk: <strong>${data.risk_level}</strong> (${data.risk_score}/100)<br>${data.explanation}`;
 
-    // add class based on level
     if (data.risk_level === "Low") {
       resultDiv.classList.add("low");
     } else if (data.risk_level === "Medium") {
@@ -132,10 +137,11 @@ async function checkRisk(event) {
     loadHistory();
     updateChart();
   } catch (err) {
-    resultDiv.innerHTML = "❌ Server not running? Start: python3 app.py";
+    resultDiv.innerHTML = "❌ Network error calling /api/risk-score";
     resultDiv.className = "high";
   }
 }
+
 
 // -------- LOAD HISTORY --------
 async function loadHistory() {
