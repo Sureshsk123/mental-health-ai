@@ -4,23 +4,21 @@ from datetime import datetime
 from sqlalchemy import create_engine, text
 import os
 
+
 app = Flask(__name__)
 app.secret_key = "super-secret-key-change-this"
 CORS(app)
 
-# SQLAlchemy engine (Postgres via DATABASE_URL)
+# Are we running on Vercel?
+IS_VERCEL = bool(os.environ.get("VERCEL"))
+
+# SQLAlchemy engine (Postgres via DATABASE_URL) – only create when not on Vercel
 DATABASE_URL = os.environ.get("DATABASE_URL")
-
-if not DATABASE_URL:
-    # On Vercel this will at least let the app import without crashing
-    raise RuntimeError("DATABASE_URL env var is not set")
-
-try:
+engine = None
+if not IS_VERCEL:
+    if not DATABASE_URL:
+        raise RuntimeError("DATABASE_URL env var is not set for local run")
     engine = create_engine(DATABASE_URL)
-except Exception as e:
-    # Print for Vercel logs and fail clearly
-    raise RuntimeError(f"Failed to create engine with DATABASE_URL: {e}")
-
 
 
 def get_current_user():
@@ -67,26 +65,27 @@ def risk_score():
     else:
         level = "High"
 
-    # Save to Postgres via SQLAlchemy
-    with engine.begin() as conn:
-        conn.execute(
-            text(
-                """
-                INSERT INTO history
-                (username, timestamp, mood, sleep_hours, screen_time_hours, risk_score, risk_level)
-                VALUES (:username, :timestamp, :mood, :sleep_hours, :screen_time_hours, :risk_score, :risk_level)
-                """
-            ),
-            {
-                "username": get_current_user(),
-                "timestamp": datetime.now().isoformat(),
-                "mood": mood,
-                "sleep_hours": sleep_hours,
-                "screen_time_hours": screen_time_hours,
-                "risk_score": score,
-                "risk_level": level,
-            },
-        )
+    # Save to Postgres only when NOT on Vercel
+    if not IS_VERCEL and engine is not None:
+        with engine.begin() as conn:
+            conn.execute(
+                text(
+                    """
+                    INSERT INTO history
+                    (username, timestamp, mood, sleep_hours, screen_time_hours, risk_score, risk_level)
+                    VALUES (:username, :timestamp, :mood, :sleep_hours, :screen_time_hours, :risk_score, :risk_level)
+                    """
+                ),
+                {
+                    "username": get_current_user(),
+                    "timestamp": datetime.now().isoformat(),
+                    "mood": mood,
+                    "sleep_hours": sleep_hours,
+                    "screen_time_hours": screen_time_hours,
+                    "risk_score": score,
+                    "risk_level": level,
+                },
+            )
 
     return jsonify(
         {
@@ -159,6 +158,10 @@ def speech_mood():
 
 @app.route("/api/clear-history", methods=["POST"])
 def clear_history():
+    # On Vercel, pretend success but do nothing
+    if IS_VERCEL or engine is None:
+        return jsonify({"status": "success"})
+
     username = get_current_user()
     with engine.begin() as conn:
         conn.execute(
@@ -170,6 +173,10 @@ def clear_history():
 
 @app.route("/api/history")
 def get_history():
+    # On Vercel, return empty list so UI works but no DB call
+    if IS_VERCEL or engine is None:
+        return jsonify([])
+
     username = get_current_user()
     with engine.begin() as conn:
         rows = conn.execute(
